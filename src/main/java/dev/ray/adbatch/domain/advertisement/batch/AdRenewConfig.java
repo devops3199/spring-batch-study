@@ -1,11 +1,13 @@
 package dev.ray.adbatch.domain.advertisement.batch;
 
+import dev.ray.adbatch.common.JobCompletionNotificationListener;
 import dev.ray.adbatch.domain.advertisement.model.Advertisement;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
@@ -49,9 +51,11 @@ public class AdRenewConfig {
     }
 
     @Bean
-    public Job adRenewJob(JobRepository jobRepository, Step adRenewStep) {
+    public Job adRenewJob(JobRepository jobRepository, Step adRenewStep, JobCompletionNotificationListener listener) {
         return new JobBuilder(JOB_NAME, jobRepository)
                 .start(adRenewStep)
+                .incrementer(new RunIdIncrementer())
+                .listener(listener)
                 .build();
     }
 
@@ -62,6 +66,7 @@ public class AdRenewConfig {
                 .reader(reader())
                 .processor(processor())
                 .writer(writer())
+                .allowStartIfComplete(true)
                 .build();
     }
 }
