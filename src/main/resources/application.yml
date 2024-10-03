@@ -2,12 +2,20 @@ spring:
   application:
     name: ad-batch
   batch:
+    jdbc:
+      initialize-schema: always
     job:
-      enabled: false
+      enabled: true
   jpa:
     show-sql: true
+    hibernate:
+      ddl-auto: update
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/flux
     username: root
     password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+logging:
+  level:
+    org.springframework.batch: DEBUG
