@@ -30,7 +30,6 @@ public class AdRenewConfig {
 
     @Bean
     public JdbcCursorItemReader<Advertisement> reader() {
-        log.info(">>> reader ");
         return new JdbcCursorItemReaderBuilder<Advertisement>()
                 .name("advertisementReader")
                 .dataSource(dataSource)
