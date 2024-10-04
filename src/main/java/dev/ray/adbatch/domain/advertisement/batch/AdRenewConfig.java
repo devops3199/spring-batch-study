@@ -14,6 +14,7 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcCursorItemReaderBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -23,14 +24,19 @@ import javax.sql.DataSource;
 
 @Slf4j
 @Configuration
-@AllArgsConstructor
 public class AdRenewConfig {
 
     public static final String JOB_NAME = "AD_RENEW_JOB";
 
     private final DataSource dataSource;
+    private final PlatformTransactionManager transactionManager;
 
-    private final int chunkSize = 10;
+    public AdRenewConfig(
+            @Qualifier("appDataSource") DataSource dataSource,
+            @Qualifier("appTransactionManager") PlatformTransactionManager transactionManager) {
+        this.dataSource = dataSource;
+        this.transactionManager = transactionManager;
+    }
 
     @Bean
     public JdbcCursorItemReader<Advertisement> reader() {
@@ -62,9 +68,9 @@ public class AdRenewConfig {
     }
 
     @Bean
-    public Step adRenewStep(JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+    public Step adRenewStep(JobRepository jobRepository) {
         return new StepBuilder("adRenewStep", jobRepository)
-                .<Advertisement, Advertisement>chunk(chunkSize, transactionManager)
+                .<Advertisement, Advertisement>chunk(10, transactionManager)
                 .reader(reader())
                 .processor(processor())
                 .writer(writer())
