@@ -4,7 +4,6 @@ import dev.ray.adbatch.domain.advertisement.listener.AdRenewJobListener;
 import dev.ray.adbatch.domain.advertisement.model.Advertisement;
 import dev.ray.adbatch.domain.advertisement.processor.AdRenewProcessor;
 import dev.ray.adbatch.domain.advertisement.writer.AdRenewWriter;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
