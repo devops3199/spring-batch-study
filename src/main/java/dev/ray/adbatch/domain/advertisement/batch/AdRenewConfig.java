@@ -1,7 +1,9 @@
 package dev.ray.adbatch.domain.advertisement.batch;
 
-import dev.ray.adbatch.common.JobCompletionNotificationListener;
+import dev.ray.adbatch.domain.advertisement.listener.AdRenewJobListener;
 import dev.ray.adbatch.domain.advertisement.model.Advertisement;
+import dev.ray.adbatch.domain.advertisement.processor.AdRenewProcessor;
+import dev.ray.adbatch.domain.advertisement.writer.AdRenewWriter;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -41,17 +43,17 @@ public class AdRenewConfig {
     }
 
     @Bean
-    public AdvertisementProcessor processor() {
-        return new AdvertisementProcessor();
+    public AdRenewProcessor processor() {
+        return new AdRenewProcessor();
     }
 
     @Bean
-    public AdvertisementWriter writer() {
-        return new AdvertisementWriter();
+    public AdRenewWriter writer() {
+        return new AdRenewWriter();
     }
 
     @Bean
-    public Job adRenewJob(JobRepository jobRepository, Step adRenewStep, JobCompletionNotificationListener listener) {
+    public Job adRenewJob(JobRepository jobRepository, Step adRenewStep, AdRenewJobListener listener) {
         return new JobBuilder(JOB_NAME, jobRepository)
                 .start(adRenewStep)
                 .incrementer(new RunIdIncrementer())
