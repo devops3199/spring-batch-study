@@ -14,14 +14,4 @@ public class Advertisement {
     private AdvertisementStatus status;
     private LocalDateTime startedAt;
     private LocalDateTime endedAt;
-
-    public Advertisement off() {
-        this.status = AdvertisementStatus.OFF;
-        return this;
-    }
-
-    public Advertisement on() {
-        this.status = AdvertisementStatus.ON;
-        return this;
-    }
 }

@@ -8,13 +8,12 @@ import org.springframework.batch.item.ItemWriter;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.sql.DataSource;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 @Slf4j
 @RequiredArgsConstructor
-public class AdRenewWriter implements ItemWriter<Advertisement> {
+public class AdOffWriter implements ItemWriter<Advertisement> {
 
     private final JdbcTemplate jdbcTemplate;
 

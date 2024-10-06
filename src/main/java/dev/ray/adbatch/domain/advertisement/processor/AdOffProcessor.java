@@ -5,11 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.ItemProcessor;
 
 @Slf4j
-public class AdRenewProcessor implements ItemProcessor<Advertisement, Advertisement> {
+public class AdOffProcessor implements ItemProcessor<Advertisement, Advertisement> {
 
     @Override
     public Advertisement process(Advertisement advertisement) {
-        log.info(">>> Advertisement process: {}", advertisement.getName());
+        log.info(">>> Advertisement Off Process: {}, {}, {}", advertisement.getId(), advertisement.getName(), advertisement.getStatus());
         return advertisement;
     }
 }

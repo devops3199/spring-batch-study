@@ -2,8 +2,10 @@ package dev.ray.adbatch.domain.advertisement.batch;
 
 import dev.ray.adbatch.domain.advertisement.listener.AdRenewJobListener;
 import dev.ray.adbatch.domain.advertisement.model.Advertisement;
-import dev.ray.adbatch.domain.advertisement.processor.AdRenewProcessor;
-import dev.ray.adbatch.domain.advertisement.writer.AdRenewWriter;
+import dev.ray.adbatch.domain.advertisement.processor.AdOffProcessor;
+import dev.ray.adbatch.domain.advertisement.processor.AdOnProcessor;
+import dev.ray.adbatch.domain.advertisement.writer.AdOffWriter;
+import dev.ray.adbatch.domain.advertisement.writer.AdOnWriter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -25,10 +27,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 @Slf4j
 @Configuration
@@ -48,10 +47,10 @@ public class AdRenewConfig {
 
     @Bean
     @StepScope
-    public JdbcCursorItemReader<Advertisement> reader(@Value("#{jobParameters[now]}") String nowStr) {
+    public JdbcCursorItemReader<Advertisement> adOffReader(@Value("#{jobParameters[now]}") String nowStr) {
         LocalDateTime now = LocalDateTime.parse(nowStr);
         return new JdbcCursorItemReaderBuilder<Advertisement>()
-                .name("advertisementReader")
+                .name("adOffReader")
                 .dataSource(dataSource)
                 .sql("SELECT * FROM advertisement a WHERE a.status = 'ON' AND a.ended_at < ?")
                 .preparedStatementSetter(ps -> {
@@ -62,33 +61,70 @@ public class AdRenewConfig {
     }
 
     @Bean
-    public AdRenewProcessor processor() {
-        return new AdRenewProcessor();
+    @StepScope
+    public JdbcCursorItemReader<Advertisement> adOnReader(@Value("#{jobParameters[now]}") String nowStr) {
+        LocalDateTime now = LocalDateTime.parse(nowStr);
+        return new JdbcCursorItemReaderBuilder<Advertisement>()
+                .name("adOnReader")
+                .dataSource(dataSource)
+                .sql("SELECT * FROM advertisement a WHERE a.status = 'READY' AND a.started_at <= ?")
+                .preparedStatementSetter(ps -> {
+                    ps.setTimestamp(1, Timestamp.valueOf(now));
+                })
+                .rowMapper(new BeanPropertyRowMapper<>(Advertisement.class))
+                .build();
     }
 
     @Bean
-    public AdRenewWriter writer() {
-        return new AdRenewWriter(new JdbcTemplate(dataSource));
+    public AdOffProcessor adOffProcessor() {
+        return new AdOffProcessor();
     }
 
     @Bean
-    public Job adRenewJob(JobRepository jobRepository, Step adRenewStep, AdRenewJobListener listener) {
-        return new JobBuilder(JOB_NAME, jobRepository)
-                .start(adRenewStep)
-                .incrementer(new RunIdIncrementer())
-                .listener(listener)
+    public AdOnProcessor adOnProcessor() {
+        return new AdOnProcessor();
+    }
+
+    @Bean
+    public AdOffWriter adOffWriter() {
+        return new AdOffWriter(new JdbcTemplate(dataSource));
+    }
+
+    @Bean
+    public AdOnWriter adOnWriter() {
+        return new AdOnWriter(new JdbcTemplate(dataSource));
+    }
+
+    @Bean
+    @JobScope
+    public Step adOffStep(JobRepository jobRepository) {
+        return new StepBuilder("adOffStep", jobRepository)
+                .<Advertisement, Advertisement>chunk(10, transactionManager)
+                .reader(adOffReader(null))
+                .processor(adOffProcessor())
+                .writer(adOffWriter())
+                .allowStartIfComplete(true)
                 .build();
     }
 
     @Bean
     @JobScope
-    public Step adRenewStep(JobRepository jobRepository) {
-        return new StepBuilder("adRenewStep", jobRepository)
+    public Step adOnStep(JobRepository jobRepository) {
+        return new StepBuilder("adOnStep", jobRepository)
                 .<Advertisement, Advertisement>chunk(10, transactionManager)
-                .reader(reader(null))
-                .processor(processor())
-                .writer(writer())
-                .allowStartIfComplete(true)
+                .reader(adOnReader(null))
+                .processor(adOnProcessor())
+                .writer(adOnWriter())
+                .build();
+    }
+
+    @Bean
+    public Job adRenewJob(JobRepository jobRepository, Step adOffStep, Step adOnStep, AdRenewJobListener listener) {
+        return new JobBuilder(JOB_NAME, jobRepository)
+                .start(adOffStep)
+                .next(adOnStep)
+                .incrementer(new RunIdIncrementer())
+                .listener(listener)
                 .build();
     }
 }
