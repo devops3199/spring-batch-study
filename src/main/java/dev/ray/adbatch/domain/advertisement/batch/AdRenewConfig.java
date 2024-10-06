@@ -50,7 +50,6 @@ public class AdRenewConfig {
     @StepScope
     public JdbcCursorItemReader<Advertisement> reader(@Value("#{jobParameters[now]}") String nowStr) {
         LocalDateTime now = LocalDateTime.parse(nowStr);
-        log.info(">>>> now: {}", nowStr);
         return new JdbcCursorItemReaderBuilder<Advertisement>()
                 .name("advertisementReader")
                 .dataSource(dataSource)
