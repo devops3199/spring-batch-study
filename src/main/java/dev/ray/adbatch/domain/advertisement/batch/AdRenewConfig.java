@@ -34,6 +34,7 @@ import java.time.LocalDateTime;
 public class AdRenewConfig {
 
     public static final String JOB_NAME = "AD_RENEW_JOB";
+    public final int CHUNK_SIZE = 10;
 
     private final DataSource dataSource;
     private final PlatformTransactionManager transactionManager;
@@ -99,7 +100,7 @@ public class AdRenewConfig {
     @JobScope
     public Step adOffStep(JobRepository jobRepository) {
         return new StepBuilder("adOffStep", jobRepository)
-                .<Advertisement, Advertisement>chunk(10, transactionManager)
+                .<Advertisement, Advertisement>chunk(CHUNK_SIZE, transactionManager)
                 .reader(adOffReader(null))
                 .processor(adOffProcessor())
                 .writer(adOffWriter())
@@ -111,7 +112,7 @@ public class AdRenewConfig {
     @JobScope
     public Step adOnStep(JobRepository jobRepository) {
         return new StepBuilder("adOnStep", jobRepository)
-                .<Advertisement, Advertisement>chunk(10, transactionManager)
+                .<Advertisement, Advertisement>chunk(CHUNK_SIZE, transactionManager)
                 .reader(adOnReader(null))
                 .processor(adOnProcessor())
                 .writer(adOnWriter())
